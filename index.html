@@ -6,7 +6,7 @@
     <link rel="preconnect" href="https://res.cloudinary.com">
     <link rel="dns-prefetch" href="https://api.cloudinary.com">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Weibo Backup - 배우 웨이보 백업</title>
+    <title>🐷 许凯 Weibo - 허개 웨이보 백업</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background-color: #f0f0f0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
@@ -437,7 +437,7 @@
     <div class="container">
         <div class="header">
             <div class="header-top">
-                <h1>🐼 Weibo Backup <span>배우백업</span></h1>
+                <h1>🐷 许凯 soso <span>♥︎</span></h1>
                 <div class="header-buttons">
                     <div class="top-avatar" id="topAvatarBtn"><span>🐣</span></div>
                     <button class="icon-btn" id="backupBtn"><svg width="18" height="18" aria-hidden="true"><use href="#ic-save"/></svg></button>
@@ -507,7 +507,7 @@
                         <div id="newMediaList" class="new-media-list"></div>
                     </div>
                 </div>
-                <button class="submit-btn" id="savePostBtn"><svg width="15" height="15" aria-hidden="true"><use href="#ic-save"/></svg> 저장하기</button>
+                <button class="submit-btn" id="savePostBtn"><svg width="15" height="15" aria-hidden="true"><use href="#ic-save"/></svg> 업로드</button>
                 <button class="cancel-btn" id="cancelPostBtn">취소</button>
             </div>
         </div>
@@ -588,7 +588,7 @@
         const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
         
         // ==================== 관리자 인증 ====================
-        const ADMIN_PASSWORD = "weibo2024";
+        const ADMIN_PASSWORD = "weibo950305";
         
         function isAdmin() { return localStorage.getItem("weibo_admin") === "true"; }
         
@@ -753,7 +753,7 @@
         const POSTS_PER_PAGE = 10;
         const ARCHIVE_PER_PAGE = 100;
         
-        let currentProfile = { name: "🐼 팬더 배우", imagePath: "images/profile.jpg" };
+        let currentProfile = { name: "허개🐷", imagePath: "images/profile.jpg" };
         const LIKES = 1995, COMMENTS = 305, RETWEETS = 486;
         
         let editingPostId = null;
@@ -1492,7 +1492,7 @@
         };
         document.getElementById('saveProfileBtn').onclick = () => {
             if (!isAdmin()) { checkAdmin(); return; }
-            currentProfile.name = document.getElementById('profileNameInput').value.trim() || "🐼 팬더 배우";
+            currentProfile.name = document.getElementById('profileNameInput').value.trim() || "허개🐷";
             saveCurrentProfile();
             updateProfileUI();
             document.getElementById('profileModal').classList.remove('active');
