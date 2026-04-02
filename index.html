@@ -478,7 +478,7 @@
     <div class="container">
         <div class="header">
             <div class="header-top">
-                <h1>许凯soso<span>♥︎</span></h1>
+                <h1>🐷 许凯soso<span>♥︎</span></h1>
                 <div class="header-buttons">
                     <div class="profile-wrap">
                         <div class="top-avatar" id="topAvatarBtn"><span>🐣</span></div>
@@ -639,7 +639,7 @@
         const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
         
         // ==================== 관리자 인증 ====================
-        const ADMIN_PASSWORD = "weibo950305";
+        const ADMIN_PASSWORD = "weibㅐ950305";
         
         function isAdmin() { return localStorage.getItem("weibo_admin") === "true"; }
         
@@ -740,7 +740,20 @@
                         if (!isSaving) {
                             posts = sortPosts(data.posts);
                             localStorage.setItem('weibo_posts_v16', JSON.stringify(posts));
-                            if (data.profile) { currentProfile = data.profile; saveCurrentProfile(); updateProfileUI(); }
+                            // profiles 배열 복원 (다중 프로필 동기화 핵심)
+                            if (data.profiles && Array.isArray(data.profiles) && data.profiles.length > 0) {
+                                profiles = data.profiles;
+                                // 현재 기기의 currentProfileId가 서버에도 있으면 유지, 없으면 첫 번째로
+                                const stillExists = profiles.find(p => p.id === currentProfileId);
+                                if (!stillExists) {
+                                    currentProfileId = profiles[0].id;
+                                }
+                                currentProfile = profiles.find(p => p.id === currentProfileId) || profiles[0];
+                                saveProfiles();
+                            } else if (data.profile) {
+                                currentProfile = data.profile;
+                            }
+                            updateProfileUI();
                             if (activeTab === 'posts') renderPosts(); else renderArchive();
                         }
                     }
@@ -781,7 +794,16 @@
                         if (!isSaving) {
                             posts = sortPosts(data.posts);
                             localStorage.setItem('weibo_posts_v16', JSON.stringify(posts));
-                            if (data.profile) { currentProfile = data.profile; saveCurrentProfile(); updateProfileUI(); }
+                            if (data.profiles && Array.isArray(data.profiles) && data.profiles.length > 0) {
+                                profiles = data.profiles;
+                                const stillExists = profiles.find(p => p.id === currentProfileId);
+                                if (!stillExists) currentProfileId = profiles[0].id;
+                                currentProfile = profiles.find(p => p.id === currentProfileId) || profiles[0];
+                                saveProfiles();
+                            } else if (data.profile) {
+                                currentProfile = data.profile;
+                            }
+                            updateProfileUI();
                             if (activeTab === 'posts') renderPosts(); else renderArchive();
                             updateSyncStatus('synced');
                         }
@@ -898,14 +920,16 @@
         
         // ==================== 데이터 저장/로드 ====================
         async function loadData() {
-            // 프로필 먼저 로드
+            // 프로필 먼저 로드 (localStorage)
             loadProfiles();
-            // 1단계: localStorage 캐시로 즉시 렌더링 (빠름)
+            // 1단계: localStorage 캐시로 즉시 렌더링
             const saved = localStorage.getItem('weibo_posts_v16');
             if (saved) { posts = JSON.parse(saved); posts = sortPosts(posts); }
             updateProfileUI();
             if (activeTab === 'posts') renderPosts(); else renderArchive();
-            // 2단계: 백그라운드에서 JSONBin 동기화
+            // 2단계: JSONBin에서 최신 데이터 (profiles 포함) 항상 가져오기
+            // lastCloudinaryUpdated를 null로 두어 강제 동기화
+            lastCloudinaryUpdated = null;
             loadPostsFromJSONBin();
         }
         
@@ -1760,7 +1784,15 @@
                 try {
                     const data = JSON.parse(e.target.result);
                     if (data.posts) { posts = sortPosts(data.posts); savePosts(); }
-                    if (data.currentProfile) { currentProfile = data.currentProfile; saveCurrentProfile(); updateProfileUI(); }
+                    if (data.currentProfile) {
+                        currentProfile = data.currentProfile;
+                        // 기존 백업 포맷 호환
+                        if (!profiles.find(p => p.imagePath === currentProfile.imagePath && p.name === currentProfile.name)) {
+                            profiles[0] = { ...profiles[0], ...currentProfile };
+                        }
+                        saveProfiles();
+                        updateProfileUI();
+                    }
                     currentPage = 1;
                     if (activeTab === 'posts') renderPosts(); else renderArchive();
                     showAlert('복원 완료', `${posts.length}개 게시물 복원됨`);
@@ -1840,7 +1872,7 @@
         };
         document.getElementById('saveProfileBtn').onclick = () => {
             if (!isAdmin()) { checkAdmin(); return; }
-            const name = document.getElementById('profileNameInput').value.trim() || '🐼 팬더 배우';
+            const name = document.getElementById('profileNameInput').value.trim() || '허개🐷';
             const imgEl = document.getElementById('profilePreviewImg');
             const editId = imgEl._editingId;
             const isNew = imgEl._isNew;
