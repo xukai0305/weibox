@@ -437,7 +437,7 @@
     <div class="container">
         <div class="header">
             <div class="header-top">
-                <h1>🐷许凯soso<span>♥︎</span></h1>
+                <h1>🐷 许凯 soso<span>♥︎</span></h1>
                 <div class="header-buttons">
                     <div class="top-avatar" id="topAvatarBtn"><span>🐣</span></div>
                     <button class="icon-btn" id="backupBtn"><svg width="18" height="18" aria-hidden="true"><use href="#ic-save"/></svg></button>
@@ -507,7 +507,7 @@
                         <div id="newMediaList" class="new-media-list"></div>
                     </div>
                 </div>
-                <button class="submit-btn" id="savePostBtn"><svg width="15" height="15" aria-hidden="true"><use href="#ic-save"/></svg> 업로드</button>
+                <button class="submit-btn" id="savePostBtn"><svg width="15" height="15" aria-hidden="true"><use href="#ic-save"/></svg> 저장하기</button>
                 <button class="cancel-btn" id="cancelPostBtn">취소</button>
             </div>
         </div>
@@ -588,7 +588,7 @@
         const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
         
         // ==================== 관리자 인증 ====================
-        const ADMIN_PASSWORD = "weibo2024";
+        const ADMIN_PASSWORD = "weibo950305";
         
         function isAdmin() { return localStorage.getItem("weibo_admin") === "true"; }
         
@@ -740,11 +740,17 @@
         }
 
         function startAutoPolling() {
-            // 30초마다 Cloudinary에서 최신 데이터 확인
-            setInterval(pollForUpdates, 30000);
-            // 페이지 포커스 시에도 즉시 확인 (탭 전환, 앱 복귀 등)
+            // 주기적 폴링 제거 → 페이지 포커스(다른 탭/앱에서 돌아올 때)에만 동기화
+            // 저장 직후 폴링으로 인한 게시글 사라짐 버그 완전 차단
             document.addEventListener('visibilitychange', () => {
-                if (document.visibilityState === 'visible') pollForUpdates();
+                if (document.visibilityState === 'visible' && !isSaving) {
+                    // 마지막 동기화로부터 60초 이상 지났을 때만 불러오기
+                    const now = Date.now();
+                    if (!startAutoPolling._lastFetch || now - startAutoPolling._lastFetch > 60000) {
+                        startAutoPolling._lastFetch = now;
+                        loadPostsFromJSONBin();
+                    }
+                }
             });
         }
         
@@ -848,8 +854,8 @@
             loadPostsFromJSONBin();
         }
         
-        function savePosts() { localStorage.setItem('weibo_posts_v16', JSON.stringify(posts)); scheduleSync(); }
-        function saveCurrentProfile() { localStorage.setItem('weibo_current_profile', JSON.stringify(currentProfile)); scheduleSync(); }
+        function savePosts() { localStorage.setItem('weibo_posts_v16', JSON.stringify(posts)); }
+        function saveCurrentProfile() { localStorage.setItem('weibo_current_profile', JSON.stringify(currentProfile)); }
         
         function getFilteredPosts() {
             let filtered = posts;
@@ -1284,6 +1290,9 @@
             if (counter) counter.textContent = `${galleryIndex+1}/${galleryItems.length}`;
             const container = document.getElementById('galleryMediaContainer');
             if (!container) return;
+            // 이전 동영상 정지 후 제거
+            const prevVid = container.querySelector('video');
+            if (prevVid) { prevVid.pause(); prevVid.src = ''; prevVid.load(); }
             container.style.opacity = '0';
             container.style.transition = 'opacity 0.15s ease';
             setTimeout(() => { container.style.opacity = '1'; }, 30);
@@ -1387,6 +1396,9 @@
             const container = document.getElementById('galleryMediaContainer');
             const gm = document.getElementById('galleryModal');
             if (dy > 90) {
+                // 영상 즉시 정지 (애니메이션 중에도 소리 안 나게)
+                const vid = container ? container.querySelector('video') : null;
+                if (vid) { vid.pause(); vid.src = ''; }
                 if (container) {
                     container.style.transition = 'transform 0.2s ease, opacity 0.2s ease';
                     container.style.transform = `translateY(${window.innerHeight * 0.45}px) scale(0.85)`;
@@ -1442,6 +1454,8 @@
             const container = document.getElementById('galleryMediaContainer');
             const gm = document.getElementById('galleryModal');
             if (dy > 90) {
+                const vid = container ? container.querySelector('video') : null;
+                if (vid) { vid.pause(); vid.src = ''; }
                 if (container) {
                     container.style.transition = 'transform 0.2s ease, opacity 0.2s ease';
                     container.style.transform = `translateY(${window.innerHeight * 0.45}px) scale(0.85)`;
@@ -1465,10 +1479,13 @@
         function prevMedia() { if (galleryIndex > 0) { galleryIndex--; updateGallery(); } }
         function closeGallery() {
             const gm = document.getElementById('galleryModal');
+            // 동영상 재생 중이면 즉시 정지 (갤러리 닫혀도 소리 계속 나는 버그 수정)
+            const vid = document.querySelector('#galleryMediaContainer video');
+            if (vid) { vid.pause(); vid.src = ''; vid.load(); }
             gm.classList.remove('active');
             gm.classList.remove('pulling');
             const container = document.getElementById('galleryMediaContainer');
-            if (container) { container.style.transform = ''; container.style.opacity = ''; }
+            if (container) { container.style.transform = ''; container.style.opacity = ''; container.innerHTML = ''; }
             document.body.style.overflow = '';
             document.body.style.cursor = '';
             gm.removeEventListener('touchstart', onPullStart);
