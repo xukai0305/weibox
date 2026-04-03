@@ -6,7 +6,7 @@
     <link rel="preconnect" href="https://res.cloudinary.com">
     <link rel="dns-prefetch" href="https://api.cloudinary.com">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>🐷 许凯 Weibo - 허개 웨이보 백업</title>
+    <title>🐷 许凯 weibo</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background-color: #f0f0f0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
@@ -481,7 +481,7 @@
                 <h1>🐷 许凯soso<span>♥︎</span></h1>
                 <div class="header-buttons">
                     <div class="profile-wrap">
-                        <div class="top-avatar" id="topAvatarBtn"><span>🐣</span></div>
+                        <div class="top-avatar" id="topAvatarBtn"><span>🐷</span></div>
                         <button class="profile-dropdown-btn" id="profileDropdownBtn" aria-label="프로필 전환">
                             <svg width="12" height="12"><use href="#ic-chevron-down"/></svg>
                         </button>
@@ -632,6 +632,9 @@
         // ==================== Cloudinary 설정 ====================
         const CLOUDINARY_CLOUD_NAME = "dduysrkk7";
         const CLOUDINARY_UPLOAD_PRESET = "weibo_upload";
+
+        // ==================== imgbb 설정 (이미지 업로드용) ====================
+        const IMGBB_API_KEY = "fdb8cd8fbe6b6aad30f477b03a7df3ea";
 
         // ==================== JSONBin 설정 (게시물 데이터 동기화용) ====================
         const JSONBIN_BIN_ID = "69cd88cc856a682189eefb06";
@@ -841,7 +844,7 @@
         let profiles = [];           // [{id, name, imagePath}, ...]
         let currentProfileId = null; // 현재 선택된 프로필 id
         let currentProfile = { name: "허개🐷", imagePath: "images/profile.jpg" };
-        const LIKES = 1995, COMMENTS = 305, RETWEETS = 486;
+        const LIKES = 1995k, COMMENTS = 305k, RETWEETS = 486k;
         // 즐겨찾기 필터
         let starFilterActive = false;
         
@@ -857,29 +860,67 @@
         // 저장 중 폴링 렌더 차단 플래그
         let isSaving = false;
         
-        // ==================== Cloudinary 업로드 ====================
-        async function uploadToCloudinary(file) {
+        // ==================== 업로드 (이미지→imgbb / 영상→Cloudinary) ====================
+        async function uploadImage(file) {
+            // imgbb: 이미지 전용, 무료 무제한
+            const formData = new FormData();
+            formData.append('image', file);
+            try {
+                const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+                    method: 'POST',
+                    body: formData
+                });
+                if (!response.ok) throw new Error('imgbb 업로드 실패 ' + response.status);
+                const data = await response.json();
+                if (!data.success) throw new Error(data.error?.message || 'imgbb 업로드 실패');
+                return {
+                    success: true,
+                    url: data.data.url,          // 원본 URL
+                    deleteUrl: data.data.delete_url, // 삭제 URL (나중에 활용 가능)
+                    type: 'image',
+                    originalName: file.name
+                };
+            } catch (error) {
+                console.error('imgbb 업로드 오류:', error);
+                return { success: false, error: error.message };
+            }
+        }
+
+        async function uploadVideo(file) {
+            // Cloudinary: 영상 전용
             const formData = new FormData();
             formData.append('file', file);
             formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
             try {
-                const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/upload`, { method: 'POST', body: formData });
-                if (!response.ok) throw new Error('업로드 실패');
+                const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                if (!response.ok) throw new Error('Cloudinary 업로드 실패 ' + response.status);
                 const data = await response.json();
-                return { success: true, url: data.secure_url, type: data.resource_type === 'video' ? 'video' : 'image', originalName: file.name };
+                return { success: true, url: data.secure_url, type: 'video', originalName: file.name };
             } catch (error) {
                 console.error('Cloudinary 업로드 오류:', error);
                 return { success: false, error: error.message };
             }
         }
-        
+
+        async function uploadFile(file) {
+            // 파일 종류에 따라 자동 분기
+            if (file.type.startsWith('video/')) {
+                return await uploadVideo(file);
+            } else {
+                return await uploadImage(file);
+            }
+        }
+
         async function uploadMultipleFiles(files, onProgress) {
             const results = [];
             let completed = 0;
             const total = files.length;
             for (const file of files) {
                 if (onProgress) onProgress(completed + 1, total);
-                const result = await uploadToCloudinary(file);
+                const result = await uploadFile(file);
                 if (result.success) results.push(result);
                 completed++;
                 if (onProgress) onProgress(completed, total);
@@ -1073,7 +1114,7 @@
                                 <img src="${profileData.imagePath}" onerror="this.style.display='none';this.parentElement.innerHTML='<span>🐣</span>'">
                             </div>
                             <div class="post-user-info">
-                                <h3>${escapeHtml(profileData.name)}<span class="badge">♥︎</span></h3>
+                                <h3>${escapeHtml(profileData.name)}<span class="badge">♥︎</svg></span></h3>
                                 <div class="post-date"><svg width="11" height="11" aria-hidden="true"><use href="#ic-calendar"/></svg> ${formatDate(post.date)}</div>
                                 ${post.location ? `<div class="post-location"><svg width="11" height="11" aria-hidden="true"><use href="#ic-pin"/></svg> ${escapeHtml(post.location)}</div>` : ''}
                             </div>
@@ -1837,31 +1878,32 @@
                 const file = e.target.files[0];
                 showAlert('업로드 중', '프로필 이미지를 Cloudinary에 업로드하는 중입니다...');
                 const formData = new FormData();
-                formData.append('file', file);
-                formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+                formData.append('image', file);
                 try {
-                    const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/upload`, { method: 'POST', body: formData });
+                    const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: formData });
                     if (!response.ok) throw new Error('업로드 실패');
                     const data = await response.json();
+                    if (!data.success) throw new Error('imgbb 오류');
+                    const imageUrl = data.data.url;
                     const imgEl = document.getElementById('profilePreviewImg');
                     const editId = imgEl._editingId;
                     const isNew = imgEl._isNew;
 
                     if (isNew) {
-                        // 새 프로필: 아직 profiles에 없으므로 임시 경로만 저장
-                        imgEl._tempImagePath = data.secure_url;
+                        // 새 프로필: 임시 경로 저장
+                        imgEl._tempImagePath = imageUrl;
                     } else {
                         // 기존 프로필 수정: 바로 저장
                         const idx = profiles.findIndex(p => p.id === editId);
                         if (idx !== -1) {
-                            profiles[idx].imagePath = data.secure_url;
+                            profiles[idx].imagePath = imageUrl;
                             if (editId === currentProfileId) currentProfile = profiles[idx];
                         }
                         updateProfileUI();
                         saveProfiles();
                     }
                     // 미리보기 항상 업데이트
-                    imgEl.innerHTML = `<img src="${data.secure_url}">`;
+                    imgEl.innerHTML = `<img src="${imageUrl}">`;
                     showAlert('이미지 변경 완료', '프로필 이미지가 변경되었습니다.');
                     scheduleSync();
                 } catch (error) {
