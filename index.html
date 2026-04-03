@@ -6,7 +6,7 @@
     <link rel="preconnect" href="https://res.cloudinary.com">
     <link rel="dns-prefetch" href="https://api.cloudinary.com">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>🐷 许凯soso - 배우 웨이보 백업</title>
+    <title>🐷 许凯soso - 허개 웨이보 백업</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background-color: #f0f0f0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
@@ -748,12 +748,16 @@
                             localStorage.setItem('weibo_posts_v16', JSON.stringify(posts));
                             // profiles 배열 복원 (다중 프로필 동기화 핵심)
                             if (data.profiles && Array.isArray(data.profiles) && data.profiles.length > 0) {
-                                profiles = data.profiles;
-                                // 현재 기기의 currentProfileId가 서버에도 있으면 유지, 없으면 첫 번째로
+                                // 로컬 profiles가 서버보다 많으면 (새 프로필 추가됐으면) 로컬 우선
+                                const mergedProfiles = [...data.profiles];
+                                profiles.forEach(lp => {
+                                    if (!mergedProfiles.find(sp => sp.id === lp.id)) {
+                                        mergedProfiles.push(lp); // 로컬에만 있는 프로필 보존
+                                    }
+                                });
+                                profiles = mergedProfiles;
                                 const stillExists = profiles.find(p => p.id === currentProfileId);
-                                if (!stillExists) {
-                                    currentProfileId = profiles[0].id;
-                                }
+                                if (!stillExists) currentProfileId = profiles[0].id;
                                 currentProfile = profiles.find(p => p.id === currentProfileId) || profiles[0];
                                 saveProfiles();
                             } else if (data.profile) {
@@ -846,7 +850,7 @@
         let profiles = [];           // [{id, name, imagePath}, ...]
         let currentProfileId = null; // 현재 선택된 프로필 id
         let currentProfile = { name: "허개🐷", imagePath: "images/profile.jpg" };
-        const LIKES = 1995, COMMENTS = 305, RETWEETS = 486;
+        const LIKES = '1.9M', COMMENTS = '305k', RETWEETS = '486k';
         // 즐겨찾기 필터
         let starFilterActive = false;
         
@@ -908,8 +912,10 @@
         }
 
         async function uploadFile(file) {
-            // 파일 종류에 따라 자동 분기
-            if (file.type.startsWith('video/')) {
+            // 확장자 + MIME 타입 둘 다 확인해서 영상/이미지 분기
+            const isVideo = file.type.startsWith('video/') ||
+                /\.(mp4|mov|avi|mkv|webm|m4v)$/i.test(file.name);
+            if (isVideo) {
                 return await uploadVideo(file);
             } else {
                 return await uploadImage(file);
@@ -1124,9 +1130,9 @@
                         <div class="post-content">${escapeHtml(post.content)}</div>
                         ${mediaHtml}
                         <div class="post-actions">
-                            <button class="action-btn"><svg width="14" height="14" aria-hidden="true"><use href="#ic-heart-fill"/></svg> ${LIKES.toLocaleString()}</button>
-                            <button class="action-btn"><svg width="14" height="14" aria-hidden="true"><use href="#ic-comment"/></svg> ${COMMENTS.toLocaleString()}</button>
-                            <button class="action-btn"><svg width="14" height="14" aria-hidden="true"><use href="#ic-retweet"/></svg> ${RETWEETS.toLocaleString()}</button>
+                            <button class="action-btn"><svg width="14" height="14" aria-hidden="true"><use href="#ic-heart-fill"/></svg> ${LIKES}</button>
+                            <button class="action-btn"><svg width="14" height="14" aria-hidden="true"><use href="#ic-comment"/></svg> ${COMMENTS}</button>
+                            <button class="action-btn"><svg width="14" height="14" aria-hidden="true"><use href="#ic-retweet"/></svg> ${RETWEETS}</button>
                             <button class="action-btn edit-btn" onclick="openPostModal(${post.id})" ${!isAdmin() ? 'style="display:none"' : ''}><svg width="14" height="14" aria-hidden="true"><use href="#ic-edit"/></svg></button>
                             <button class="action-btn delete-btn" onclick="deletePost(${post.id})" ${!isAdmin() ? 'style="display:none"' : ''}><svg width="14" height="14" aria-hidden="true"><use href="#ic-trash"/></svg></button>
                         </div>
@@ -1503,6 +1509,8 @@
             const img = document.getElementById('profilePreviewImg');
             img.innerHTML = `<img src="${currentProfile.imagePath}" onerror="this.onerror=null;this.parentElement.innerHTML='<span>🐣</span>'">`;
             img._editingId = currentProfileId;
+            img._isNew = false;       // 반드시 false 명시 (새 프로필 플래그 초기화)
+            img._tempImagePath = null;
             document.getElementById('deleteProfileBtn').style.display = profiles.length > 1 ? 'block' : 'none';
             document.getElementById('profileModal').classList.add('active');
         }
@@ -1877,7 +1885,7 @@
             if (!isAdmin()) { checkAdmin(); return; }
             if (e.target.files[0]) {
                 const file = e.target.files[0];
-                showAlert('업로드 중', '프로필 이미지를 Cloudinary에 업로드하는 중입니다...');
+                showAlert('업로드 중', '프로필 이미지를 업로드하는 중입니다...');
                 const formData = new FormData();
                 formData.append('image', file);
                 try {
@@ -1932,7 +1940,6 @@
                 const imgPath = imgEl._tempImagePath || 'images/profile.jpg';
                 const newP = { id: Date.now(), name, imagePath: imgPath };
                 profiles.push(newP);
-                // 새 프로필로 자동 전환
                 currentProfile = newP;
                 currentProfileId = newP.id;
             }
@@ -1941,7 +1948,10 @@
             document.getElementById('profileModal').classList.remove('active');
             if (activeTab === 'posts') renderPosts(); else renderArchive();
             showAlert('저장 완료', '프로필이 저장되었습니다.');
+            // isSaving으로 동기화 중 덮어쓰기 방지
+            isSaving = true;
             scheduleSync();
+            setTimeout(() => { isSaving = false; }, 5000);
         };
         
         document.getElementById('alertCloseBtn').onclick = closeAlert;
