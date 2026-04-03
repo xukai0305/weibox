@@ -6,7 +6,7 @@
     <link rel="preconnect" href="https://res.cloudinary.com">
     <link rel="dns-prefetch" href="https://api.cloudinary.com">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>🐷 许凯soso - 허개 웨이보 백업</title>
+    <title>🐷 许凯soso- 허개 웨이보 백업</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background-color: #f0f0f0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
@@ -478,7 +478,7 @@
                 <h1>🐷 许凯soso<span>♥︎</span></h1>
                 <div class="header-buttons">
                     <div class="profile-wrap">
-                        <div class="top-avatar" id="topAvatarBtn"><span>🐣</span></div>
+                        <div class="top-avatar" id="topAvatarBtn"><span>🐷</span></div>
                         <button class="profile-dropdown-btn" id="profileDropdownBtn" aria-label="프로필 전환">
                             <svg width="12" height="12"><use href="#ic-chevron-down"/></svg>
                         </button>
@@ -841,7 +841,7 @@
         let profiles = [];           // [{id, name, imagePath}, ...]
         let currentProfileId = null; // 현재 선택된 프로필 id
         let currentProfile = { name: "허개🐷", imagePath: "images/profile.jpg" };
-        const LIKES = 1995, COMMENTS = 305, RETWEETS = 486;
+        const LIKES = 1995k, COMMENTS = 305k, RETWEETS = 486k;
         // 즐겨찾기 필터
         let starFilterActive = false;
         
@@ -1280,15 +1280,14 @@
             });
         }
         
-        const MAX_IMAGE_MB = 10;
         const MAX_VIDEO_MB = 100;
-        const MAX_IMAGE_BYTES = MAX_IMAGE_MB * 1024 * 1024;
         const MAX_VIDEO_BYTES = MAX_VIDEO_MB * 1024 * 1024;
         function getMaxBytes(file) {
-            return file.type.startsWith('video/') ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES;
+            // 이미지는 imgbb 무제한이므로 제한 없음, 영상만 100MB
+            return file.type.startsWith('video/') ? MAX_VIDEO_BYTES : Infinity;
         }
         function getMaxMB(file) {
-            return file.type.startsWith('video/') ? MAX_VIDEO_MB : MAX_IMAGE_MB;
+            return file.type.startsWith('video/') ? MAX_VIDEO_MB : null;
         }
 
         function renderNewMedia() {
