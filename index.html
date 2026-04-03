@@ -6,7 +6,7 @@
     <link rel="preconnect" href="https://res.cloudinary.com">
     <link rel="dns-prefetch" href="https://api.cloudinary.com">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Weibo Backup - 배우 웨이보 백업</title>
+    <title>🐷 许凯soso - 배우 웨이보 백업</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background-color: #f0f0f0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
@@ -475,10 +475,10 @@
     <div class="container">
         <div class="header">
             <div class="header-top">
-                <h1>🐼 Weibo Backup <span>배우백업</span></h1>
+                <h1>🐷 许凯soso <span>♥︎</span></h1>
                 <div class="header-buttons">
                     <div class="profile-wrap">
-                        <div class="top-avatar" id="topAvatarBtn"><span>🐣</span></div>
+                        <div class="top-avatar" id="topAvatarBtn"><span>🐷</span></div>
                         <button class="profile-dropdown-btn" id="profileDropdownBtn" aria-label="프로필 전환">
                             <svg width="12" height="12"><use href="#ic-chevron-down"/></svg>
                         </button>
@@ -639,7 +639,7 @@
         const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
         
         // ==================== 관리자 인증 ====================
-        const ADMIN_PASSWORD = "weibo2024";
+        const ADMIN_PASSWORD = "weibo950305";
         
         function isAdmin() { return localStorage.getItem("weibo_admin") === "true"; }
         
@@ -845,8 +845,8 @@
         // 다중 프로필
         let profiles = [];           // [{id, name, imagePath}, ...]
         let currentProfileId = null; // 현재 선택된 프로필 id
-        let currentProfile = { name: "🐼 팬더 배우", imagePath: "images/profile.jpg" };
-        const LIKES = 1995k, COMMENTS = 305k, RETWEETS = 486k;
+        let currentProfile = { name: "허개🐷", imagePath: "images/profile.jpg" };
+        const LIKES = 1995, COMMENTS = 305, RETWEETS = 486;
         // 즐겨찾기 필터
         let starFilterActive = false;
         
@@ -1116,7 +1116,7 @@
                                 <img src="${profileData.imagePath}" onerror="this.style.display='none';this.parentElement.innerHTML='<span>🐣</span>'">
                             </div>
                             <div class="post-user-info">
-                                <h3>${escapeHtml(profileData.name)}<span class="badge"><svg width="9" height="9" aria-hidden="true"><use href="#ic-play"/></svg></span></h3>
+                                <h3>${escapeHtml(profileData.name)}<span class="badge">♥︎</span></h3>
                                 <div class="post-date"><svg width="11" height="11" aria-hidden="true"><use href="#ic-calendar"/></svg> ${formatDate(post.date)}</div>
                                 ${post.location ? `<div class="post-location"><svg width="11" height="11" aria-hidden="true"><use href="#ic-pin"/></svg> ${escapeHtml(post.location)}</div>` : ''}
                             </div>
@@ -1426,7 +1426,7 @@
             } else {
                 // 기존 단일 프로필 마이그레이션
                 const oldProfile = localStorage.getItem('weibo_current_profile');
-                const p = oldProfile ? JSON.parse(oldProfile) : { name: '🐼 팬더 배우', imagePath: 'images/profile.jpg' };
+                const p = oldProfile ? JSON.parse(oldProfile) : { name: '허개🐷', imagePath: 'images/profile.jpg' };
                 profiles = [{ id: Date.now(), name: p.name, imagePath: p.imagePath }];
                 saveProfiles();
             }
@@ -1915,7 +1915,7 @@
         };
         document.getElementById('saveProfileBtn').onclick = () => {
             if (!isAdmin()) { checkAdmin(); return; }
-            const name = document.getElementById('profileNameInput').value.trim() || '🐼 팬더 배우';
+            const name = document.getElementById('profileNameInput').value.trim() || '허개🐷';
             const imgEl = document.getElementById('profilePreviewImg');
             const editId = imgEl._editingId;
             const isNew = imgEl._isNew;
